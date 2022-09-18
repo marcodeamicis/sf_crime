@@ -3,6 +3,8 @@ sf_crimes
 
 kaggle's competition sf crimes
 
+https://www.kaggle.com/competitions/sf-crime/
+
 Project Organization
 ------------
 
