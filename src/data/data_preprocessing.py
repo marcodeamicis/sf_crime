@@ -1,18 +1,10 @@
+# from datetime import datetime
+
+import humps
 import numpy as np
 import pandas as pd
 from sklearn.base import BaseEstimator, TransformerMixin
 from typing import List
-
-
-def address_split(word):
-    """This function get the 'Address' attribute and return the main street.
-    """
-    if ' of ' in word:
-        return word.lower().partition('block of ')[2].lower().strip()
-    elif ' / ' in word:
-        return word.partition(' / ')[0].lower().strip()
-    else:
-        return np.nan
 
 
 class TransformCordinates(BaseEstimator, TransformerMixin):
@@ -51,3 +43,69 @@ class TransformCordinates(BaseEstimator, TransformerMixin):
                 _y] = self._df.loc[self._df[self.groupby] == district, _y].mean()
 
         return df_replaced
+
+
+def snake_case_columns(df: pd.DataFrame) -> pd.DataFrame:
+    df_prepared = df.copy()
+    df_prepared.columns = [humps.decamelize(x.strip()).lower() for x in df_prepared.columns.tolist()]
+
+    return df_prepared
+
+
+def address_split(word: str) -> str:
+    """This function get the 'Address' attribute and return the main street.
+    """
+    if ' of ' in word:
+        return word.lower().partition('block of ')[2].lower().strip()
+    elif ' / ' in word:
+        return word.partition(' / ')[0].lower().strip()
+    else:
+        return np.nan
+
+
+def create_simplified_address_column(df: pd.DataFrame, address_column: str = 'address') -> pd.DataFrame:
+    """This function get the 'Address' attribute and return the main street.
+    """
+    df_transformed = df.copy()
+
+    if 'address' in df_transformed.columns:
+        df_transformed['simplified_address'] = df_transformed[address_column].apply(address_split)
+        df_transformed.drop(columns=[address_column], inplace=True)
+
+    return df_transformed
+
+
+def create_date_based_columns(df: pd.DataFrame, date_column: str = 'dates') -> pd.DataFrame:
+    df_evaluation = df.copy()
+
+    if date_column in df_evaluation.columns:
+        lst_original_columns = df.columns.tolist()
+
+        df_evaluation[date_column + '_year'] = df_evaluation['dates'].dt.year
+        df_evaluation[date_column + '_month'] = df_evaluation['dates'].dt.month
+        df_evaluation[date_column + '_hour'] = df_evaluation['dates'].dt.hour
+        df_evaluation[date_column + '_day'] = df_evaluation['dates'].dt.date
+
+        # df_evaluation['is_daytime'] = np.where(
+        #     (df_evaluation[date_column + '_hour'] > datetime.strptime('06:00:00', '%H:%M:%S').time()) &
+        #     (df_evaluation[date_column + '_hour'] < datetime.strptime('18:00:00', '%H:%M:%S').time()),
+        #     1, 0
+        #     )
+
+        df_evaluation['is_daytime'] = np.where(
+            (df_evaluation[date_column + '_hour'] > 6) & (df_evaluation[date_column + '_hour'] < 18),
+            1, 0
+            )
+
+        lst_original_columns.remove(date_column)
+        lst_new_columns = [
+            date_column + '_year', date_column + '_month', date_column + '_hour', date_column + '_day', 'is_daytime'
+            ]
+        lst_new_columns.extend(lst_original_columns)
+
+        df_evaluation = df_evaluation[lst_new_columns]
+
+    else:
+        print(f"Column '{date_column}' was not detected.")
+
+    return df_evaluation
