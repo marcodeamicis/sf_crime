@@ -57,8 +57,8 @@ def address_split(word: str) -> str:
     """
     if ' of ' in word:
         return word.lower().partition('block of ')[2].lower().strip()
-    elif ' / ' in word:
-        return word.partition(' / ')[0].lower().strip()
+    elif ' /' in word:
+        return word.partition(' /')[0].lower().strip()
     else:
         return np.nan
 
@@ -84,7 +84,9 @@ def create_date_based_columns(df: pd.DataFrame, date_column: str = 'dates') -> p
         df_evaluation[date_column + '_year'] = df_evaluation['dates'].dt.year
         df_evaluation[date_column + '_month'] = df_evaluation['dates'].dt.month
         df_evaluation[date_column + '_hour'] = df_evaluation['dates'].dt.hour
-        df_evaluation[date_column + '_day'] = df_evaluation['dates'].dt.date
+        # df_evaluation[date_column + '_day'] = df_evaluation['dates'].dt.date
+        df_evaluation[date_column + '_day'] = df_evaluation['dates'].dt.day
+        # TODO: Deactive the line above and active two lines above.
 
         # df_evaluation['is_daytime'] = np.where(
         #     (df_evaluation[date_column + '_hour'] > datetime.strptime('06:00:00', '%H:%M:%S').time()) &
