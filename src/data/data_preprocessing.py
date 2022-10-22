@@ -1,4 +1,4 @@
-# from datetime import datetime
+# %%
 
 import humps
 import numpy as np
@@ -111,3 +111,76 @@ def create_date_based_columns(df: pd.DataFrame, date_column: str = 'dates') -> p
         print(f"Column '{date_column}' was not detected.")
 
     return df_evaluation
+
+
+def one_hot_encoding_target(df: pd.DataFrame = None, column_name: str = 'index') -> pd. DataFrame:
+    lst_columns = [
+        'ARSON', 'ASSAULT', 'BAD CHECKS', 'BRIBERY', 'BURGLARY', 'DISORDERLY CONDUCT', 'DRIVING UNDER THE INFLUENCE',
+        'DRUG/NARCOTIC', 'DRUNKENNESS', 'EMBEZZLEMENT', 'EXTORTION', 'FAMILY OFFENSES', 'FORGERY/COUNTERFEITING',
+        'FRAUD', 'GAMBLING', 'KIDNAPPING', 'LARCENY/THEFT', 'LIQUOR LAWS', 'LOITERING', 'MISSING PERSON',
+        'NON-CRIMINAL', 'OTHER OFFENSES', 'PORNOGRAPHY/OBSCENE MAT', 'PROSTITUTION', 'RECOVERED VEHICLE', 'ROBBERY',
+        'RUNAWAY', 'SECONDARY CODES', 'SEX OFFENSES FORCIBLE', 'SEX OFFENSES NON FORCIBLE', 'STOLEN PROPERTY',
+        'SUICIDE', 'SUSPICIOUS OCC', 'TREA', 'TRESPASS', 'VANDALISM', 'VEHICLE THEFT', 'WARRANTS', 'WEAPON LAWS'
+    ]
+    df_transposed = pd.DataFrame(columns=lst_columns)
+
+    for column in df_transposed.columns:
+        df_transposed[column] = np.where(df[column_name] == column, 1, 0)
+
+    return df_transposed
+
+
+def ordinal_encoding_target(df: pd.DataFrame, column_name: str) -> pd. DataFrame:
+    dct_columns = {
+        'ARSON': 0,
+        'ASSAULT': 1,
+        'BAD CHECKS': 2,
+        'BRIBERY': 3,
+        'BURGLARY': 4,
+        'DISORDERLY CONDUCT': 5,
+        'DRIVING UNDER THE INFLUENCE': 6,
+        'DRUG/NARCOTIC': 7,
+        'DRUNKENNESS': 8,
+        'EMBEZZLEMENT': 9,
+        'EXTORTION': 10,
+        'FAMILY OFFENSES': 11,
+        'FORGERY/COUNTERFEITING': 12,
+        'FRAUD': 13,
+        'GAMBLING': 14,
+        'KIDNAPPING': 15,
+        'LARCENY/THEFT': 16,
+        'LIQUOR LAWS': 17,
+        'LOITERING': 18,
+        'MISSING PERSON': 19,
+        'NON-CRIMINAL': 20,
+        'OTHER OFFENSES': 21,
+        'PORNOGRAPHY/OBSCENE MAT': 22,
+        'PROSTITUTION': 23,
+        'RECOVERED VEHICLE': 24,
+        'ROBBERY': 25,
+        'RUNAWAY': 26,
+        'SECONDARY CODES': 27,
+        'SEX OFFENSES FORCIBLE': 28,
+        'SEX OFFENSES NON FORCIBLE': 29,
+        'STOLEN PROPERTY': 30,
+        'SUICIDE': 31,
+        'SUSPICIOUS OCC': 32,
+        'TREA': 33,
+        'TRESPASS': 34,
+        'VANDALISM': 35,
+        'VEHICLE THEFT': 36,
+        'WARRANTS': 37,
+        'WEAPON LAWS': 38
+    }
+    df_encoded = df.copy()
+    df_encoded[column_name].replace(dct_columns, inplace=True)
+
+    return df_encoded
+
+
+if __name__ == '__main__':
+    df_test = pd.DataFrame(['ARSON', 'ASSAULT', 'BAD CHECKS'], columns=['index'])
+
+    df_ohe = one_hot_encoding_target(df=df_test)
+
+    df_ordinal = ordinal_encoding_target(df=df_test, column_name='index')
