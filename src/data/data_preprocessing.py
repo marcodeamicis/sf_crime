@@ -5,6 +5,7 @@ import humps
 import numpy as np
 import pandas as pd
 from sklearn.base import BaseEstimator, TransformerMixin
+from sklearn.preprocessing import MinMaxScaler
 
 
 class TransformCordinates(BaseEstimator, TransformerMixin):
@@ -43,6 +44,10 @@ class TransformCordinates(BaseEstimator, TransformerMixin):
                 _y] = self._df.loc[self._df[self.groupby] == district, _y].mean()
 
         return df_replaced
+
+
+class MinMaxScaling(BaseEstimator, TransformerMixin):
+    
 
 
 def snake_case_columns(df: pd.DataFrame) -> pd.DataFrame:
