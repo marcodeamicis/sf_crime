@@ -3,6 +3,7 @@
 import humps
 import numpy as np
 import pandas as pd
+from pyparsing import col
 from sklearn.base import BaseEstimator, TransformerMixin
 from typing import List
 
@@ -132,45 +133,14 @@ def one_hot_encoding_target(df: pd.DataFrame = None, column_name: str = 'index')
 
 def ordinal_encoding_target(df: pd.DataFrame, column_name: str) -> pd. DataFrame:
     dct_columns = {
-        'ARSON': 0,
-        'ASSAULT': 1,
-        'BAD CHECKS': 2,
-        'BRIBERY': 3,
-        'BURGLARY': 4,
-        'DISORDERLY CONDUCT': 5,
-        'DRIVING UNDER THE INFLUENCE': 6,
-        'DRUG/NARCOTIC': 7,
-        'DRUNKENNESS': 8,
-        'EMBEZZLEMENT': 9,
-        'EXTORTION': 10,
-        'FAMILY OFFENSES': 11,
-        'FORGERY/COUNTERFEITING': 12,
-        'FRAUD': 13,
-        'GAMBLING': 14,
-        'KIDNAPPING': 15,
-        'LARCENY/THEFT': 16,
-        'LIQUOR LAWS': 17,
-        'LOITERING': 18,
-        'MISSING PERSON': 19,
-        'NON-CRIMINAL': 20,
-        'OTHER OFFENSES': 21,
-        'PORNOGRAPHY/OBSCENE MAT': 22,
-        'PROSTITUTION': 23,
-        'RECOVERED VEHICLE': 24,
-        'ROBBERY': 25,
-        'RUNAWAY': 26,
-        'SECONDARY CODES': 27,
-        'SEX OFFENSES FORCIBLE': 28,
-        'SEX OFFENSES NON FORCIBLE': 29,
-        'STOLEN PROPERTY': 30,
-        'SUICIDE': 31,
-        'SUSPICIOUS OCC': 32,
-        'TREA': 33,
-        'TRESPASS': 34,
-        'VANDALISM': 35,
-        'VEHICLE THEFT': 36,
-        'WARRANTS': 37,
-        'WEAPON LAWS': 38
+        'ARSON': 0, 'ASSAULT': 1, 'BAD CHECKS': 2, 'BRIBERY': 3, 'BURGLARY': 4, 'DISORDERLY CONDUCT': 5,
+        'DRIVING UNDER THE INFLUENCE': 6, 'DRUG/NARCOTIC': 7, 'DRUNKENNESS': 8, 'EMBEZZLEMENT': 9, 'EXTORTION': 10,
+        'FAMILY OFFENSES': 11, 'FORGERY/COUNTERFEITING': 12, 'FRAUD': 13, 'GAMBLING': 14, 'KIDNAPPING': 15,
+        'LARCENY/THEFT': 16, 'LIQUOR LAWS': 17, 'LOITERING': 18, 'MISSING PERSON': 19, 'NON-CRIMINAL': 20,
+        'OTHER OFFENSES': 21, 'PORNOGRAPHY/OBSCENE MAT': 22, 'PROSTITUTION': 23, 'RECOVERED VEHICLE': 24, 'ROBBERY': 25,
+        'RUNAWAY': 26, 'SECONDARY CODES': 27, 'SEX OFFENSES FORCIBLE': 28, 'SEX OFFENSES NON FORCIBLE': 29,
+        'STOLEN PROPERTY': 30, 'SUICIDE': 31, 'SUSPICIOUS OCC': 32, 'TREA': 33, 'TRESPASS': 34, 'VANDALISM': 35,
+        'VEHICLE THEFT': 36, 'WARRANTS': 37, 'WEAPON LAWS': 38
     }
     df_encoded = df.copy()
     df_encoded[column_name].replace(dct_columns, inplace=True)
@@ -178,9 +148,31 @@ def ordinal_encoding_target(df: pd.DataFrame, column_name: str) -> pd. DataFrame
     return df_encoded
 
 
+def cyclic_encoding(df: pd.DataFrame, column_name: str, maximum_value: float) -> pd.DataFrame:
+    """Generate the sine and cosine features from original cyclical features.
+
+    Arguments:
+        df -- Dataframe that contains the cyclical feature.
+        column_name -- The cyclical feature.
+        maximum_value -- Maximum value that feature can assume.
+
+    Returns:
+        Dataframe with the sine and cosine of the original feature.
+    """
+    df_transformed = df.copy()
+    df_transformed[column_name + '_sin'] = np.sin(2 * np.pi * df_transformed[column_name] / maximum_value)
+    df_transformed[column_name + '_cos'] = np.cos(2 * np.pi * df_transformed[column_name] / maximum_value)
+    df_transformed.drop(columns=[column_name], inplace=True)
+
+    return df_transformed
+
+
 if __name__ == '__main__':
     df_test = pd.DataFrame(['ARSON', 'ASSAULT', 'BAD CHECKS'], columns=['index'])
+    df_test_cyclic = pd.DataFrame([1, 2, 3, 4, 9, 10, 11, 12], columns=['month'])
 
     df_ohe = one_hot_encoding_target(df=df_test)
 
     df_ordinal = ordinal_encoding_target(df=df_test, column_name='index')
+
+    df_test_cyclic_trandformed = cyclic_encoding(df_test_cyclic, column_name='month', maximum_value=12)
