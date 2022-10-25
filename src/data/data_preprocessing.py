@@ -1,11 +1,10 @@
 # %%
+from typing import List, Union
 
 import humps
 import numpy as np
 import pandas as pd
-from pyparsing import col
 from sklearn.base import BaseEstimator, TransformerMixin
-from typing import List
 
 
 class TransformCordinates(BaseEstimator, TransformerMixin):
@@ -148,31 +147,41 @@ def ordinal_encoding_target(df: pd.DataFrame, column_name: str) -> pd. DataFrame
     return df_encoded
 
 
-def cyclic_encoding(df: pd.DataFrame, column_name: str, maximum_value: float) -> pd.DataFrame:
+def cyclic_encoding(df: pd.DataFrame, column_name: Union[List, str], maximum_value: Union[List, float]) -> pd.DataFrame:
     """Generate the sine and cosine features from original cyclical features.
 
     Arguments:
         df -- Dataframe that contains the cyclical feature.
-        column_name -- The cyclical feature.
-        maximum_value -- Maximum value that feature can assume.
+        column_name -- The cyclical feature or a list of cyclical feature contained in df.
+        maximum_value -- Maximum value that feature can assume. If a list is passed in column_name,
+        it is mandatory to define a list in this parameter too
 
     Returns:
         Dataframe with the sine and cosine of the original feature.
     """
     df_transformed = df.copy()
-    df_transformed[column_name + '_sin'] = np.sin(2 * np.pi * df_transformed[column_name] / maximum_value)
-    df_transformed[column_name + '_cos'] = np.cos(2 * np.pi * df_transformed[column_name] / maximum_value)
-    df_transformed.drop(columns=[column_name], inplace=True)
+
+    if isinstance(column_name, list):
+        for column, value in zip(column_name, maximum_value):
+            df_transformed[column + '_sin'] = np.sin(2 * np.pi * df_transformed[column] / value)
+            df_transformed[column + '_cos'] = np.cos(2 * np.pi * df_transformed[column] / value)
+            df_transformed.drop(columns=[column], inplace=True)
+    else:
+        df_transformed[column_name + '_sin'] = np.sin(2 * np.pi * df_transformed[column_name] / maximum_value)
+        df_transformed[column_name + '_cos'] = np.cos(2 * np.pi * df_transformed[column_name] / maximum_value)
+        df_transformed.drop(columns=[column_name], inplace=True)
 
     return df_transformed
 
 
 if __name__ == '__main__':
     df_test = pd.DataFrame(['ARSON', 'ASSAULT', 'BAD CHECKS'], columns=['index'])
-    df_test_cyclic = pd.DataFrame([1, 2, 3, 4, 9, 10, 11, 12], columns=['month'])
+    df_test_cyclic = pd.DataFrame(
+        {'month': [1, 2, 3, 10, 11, 12], 'day':[1, 5, 10, 15, 20, 25]}
+        )
 
     df_ohe = one_hot_encoding_target(df=df_test)
 
     df_ordinal = ordinal_encoding_target(df=df_test, column_name='index')
 
-    df_test_cyclic_trandformed = cyclic_encoding(df_test_cyclic, column_name='month', maximum_value=12)
+    df_test_cyclic_trandformed = cyclic_encoding(df_test_cyclic, column_name=['month', 'day'], maximum_value=[12, 31])
