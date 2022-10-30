@@ -1,5 +1,5 @@
 # %%
-from typing import List, Union
+from typing import Dict, List, Union
 
 import humps
 import numpy as np
@@ -41,6 +41,31 @@ class TransformCordinates(BaseEstimator, TransformerMixin):
             df_replaced.loc[
                 (df_replaced[self.groupby] == district) & (df_replaced[_y].isna()),
                 _y] = self._df.loc[self._df[self.groupby] == district, _y].mean()
+
+        return df_replaced
+
+
+class ScaleMinMax(BaseEstimator, TransformerMixin):
+    def __init__(self, columns: Dict = {'day': 31, 'month': 12}) -> None:
+        self.columns = columns
+        self._dct_minmax = {}
+
+    def fit(self, X: pd.DataFrame):
+        df_replaced = X.copy()
+
+        for column, value in self.columns.items():
+            self._dct_minmax[column] = {'max': value, 'min': df_replaced[column].min()}
+
+        return self
+
+    def transform(self, X: pd.DataFrame) -> pd.DataFrame:
+        df_replaced = X.copy()
+
+        for column in self.columns.keys():
+            max_value = self._dct_minmax[column]['max']
+            min_value = self._dct_minmax[column]['min']
+
+            df_replaced[column] = (df_replaced[column] - min_value) / (max_value - min_value)
 
         return df_replaced
 
@@ -185,3 +210,9 @@ if __name__ == '__main__':
     df_ordinal = ordinal_encoding_target(df=df_test, column_name='index')
 
     df_test_cyclic_trandformed = cyclic_encoding(df_test_cyclic, column_name=['month', 'day'], maximum_value=[12, 31])
+
+    scaler = ScaleMinMax()
+
+    scaler.fit(df_test_cyclic)
+
+    df_scaled = scaler.transform(df_test_cyclic)
