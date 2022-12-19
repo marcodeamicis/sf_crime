@@ -4,10 +4,13 @@
 Created on Sun Jun 16 22:36:39 2019
 @author: Gustavo Suto
 """
+# %%
 from numpy import dtype
+import numpy as np
+import pandas as pd
 
 
-def breve_descricao(df):
+def breve_descricao(df: pd.DataFrame) -> pd.DataFrame:
     """
     Função breve_descricao
     Objetivo: Exclui atributos que estejam com colunas com todos os valores
@@ -17,10 +20,12 @@ def breve_descricao(df):
     Args:
         df ([pandas.DataFrame]): [Dataframe que queremos analisar.]
     """
-    df.dropna(axis=1, how="all", inplace=True)
+    df_mod = df.copy()
 
-    print("O data set possui: \n- {} atributos/campos; e \n- {} registros.\n".format(df.shape[1], df.shape[0]))
-    df.info()
+    df_mod.dropna(axis=1, how="all", inplace=True)
+
+    print(f"""O data set possui: \n- {df_mod.shape[1]} atributos/campos; e \n- {df_mod.shape[0]} registros.\n""")
+    serie_nulos(df)
 
 
 def serie_nulos(df, corte: float = 0.5):
@@ -55,18 +60,29 @@ def cardinalidade(df):
     """
     import pandas as pd
 
-    df_temporario = df.select_dtypes(exclude=["float64"])
+    # df_temporario = df.select_dtypes(exclude=["float64"])
+    df_temporario = df.copy()
     matriz_cardialidade = []
 
     for coluna in df_temporario.columns:
-        df_temporario.fillna('NaN', inplace=True)
-        proporcao_nulos = len(df_temporario.loc[df_temporario[coluna] == 'NaN']) / len(df_temporario)
 
-        matriz_cardialidade.append([
-            coluna, dtype(df_temporario[coluna]), len(
-                df_temporario[coluna].unique()
-            ), sorted(df_temporario[coluna].unique()), proporcao_nulos
-        ])
+        if dtype(df_temporario[coluna]) not in [float, 'float32', 'float64']:
+            df_temporario.loc[df_temporario[coluna].isna(), coluna] = 'NaN'
+            proporcao_nulos = len(df_temporario.loc[df_temporario[coluna] == 'NaN']) / len(df_temporario)
+            matriz_cardialidade.append([
+                coluna, dtype(df_temporario[coluna]), len(df_temporario[coluna].unique()),
+                sorted(df_temporario[coluna].unique()),
+                proporcao_nulos
+            ])
+
+        else:
+            df_temporario.loc[df_temporario[coluna].isna(), coluna] = np.nan
+            proporcao_nulos = len(df_temporario.loc[df_temporario[coluna].isna()]) / len(df_temporario)
+            matriz_cardialidade.append([
+                coluna, dtype(df_temporario[coluna]), 'continuous',
+                [df_temporario[coluna].min(), df_temporario[coluna].max()],
+                proporcao_nulos
+            ])
 
     matriz_cardialidade = pd.DataFrame(matriz_cardialidade, columns=[
         "Atributo", "DType", "Cardinalidade", "Valores", "Proporção Nulos"
@@ -114,3 +130,13 @@ def r2_ajustado(x, y, y_pred):
     n = x.shape[0]
     k = x.shape[1]
     return (1 - ((n - 1) / (n - (k + 1))) * (1 - r2_score(y, y_pred)))
+
+
+if __name__ == '__main__':
+    df = pd.DataFrame({
+        'a': [1, 2, 3], 'b': ['a', 'b', 'c'], 'c': [1.23, 0.987, 123.5]
+        })
+
+    breve_descricao(df)
+
+    display(cardinalidade(df))
